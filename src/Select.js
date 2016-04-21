@@ -8,6 +8,7 @@ import stripDiacritics from './utils/stripDiacritics';
 import Async from './Async';
 import Option from './Option';
 import Value from './Value';
+import Draggable from './Draggable';
 
 function stringifyValue (value) {
 	if (typeof value === 'object') {
@@ -584,8 +585,9 @@ const Select = React.createClass({
 			return valueArray.map((value, i) => {
 				return (
 					<ValueComponent
+            moveItem={this.props.moveItem}
 						disabled={this.props.disabled || value.clearableValue === false}
-						key={`value-${i}-${value[this.props.valueKey]}`}
+						key={`value-${value[this.props.valueKey]}`}
 						onClick={onClick}
 						onRemove={this.removeValue}
 						value={value}
@@ -863,3 +865,4 @@ const Select = React.createClass({
 });
 
 export default Select;
+export {Draggable};

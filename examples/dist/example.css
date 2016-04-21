@@ -327,6 +327,9 @@
 .Select--multi.is-disabled .Select-value-icon:active {
   background-color: #fcfcfc;
 }
+.Select-value-dragging {
+  opacity: 0.3;
+}
 @keyframes Select-animation-spin {
   to {
     transform: rotate(1turn);
