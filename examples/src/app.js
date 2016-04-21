@@ -11,6 +11,7 @@ import Multiselect from './components/Multiselect';
 import NumericSelect from './components/NumericSelect';
 import Cities from './components/Cities';
 import States from './components/States';
+import DraggableSelect from './components/DraggableSelect';
 
 ReactDOM.render(
 	<div>
@@ -21,6 +22,7 @@ ReactDOM.render(
 		<NumericSelect label="Numeric Values" />
 		<CustomRender label="Custom Render Methods"/>
 		<CustomComponents label="Custom Placeholder, Option and Value Components" />
+		<DraggableSelect label="Draggable Select" />
 		{/*
 		<SelectedValuesField label="Option Creation (tags mode)" options={FLAVOURS} allowCreate hint="Enter a value that's NOT in the list, then hit return" />
 		*/}

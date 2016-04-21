@@ -64,7 +64,7 @@ var Async = _react2['default'].createClass({
 		loadOptions: _react2['default'].PropTypes.func.isRequired, // function to call to load options asynchronously
 		loadingPlaceholder: _react2['default'].PropTypes.string, // replaces the placeholder while options are loading
 		minimumInput: _react2['default'].PropTypes.number, // the minimum number of characters that trigger loadOptions
-		noResultsText: _react2['default'].PropTypes.string, // placeholder displayed when there are no matching search results (shared with Select)
+		noResultsText: stringOrNode, // placeholder displayed when there are no matching search results (shared with Select)
 		placeholder: stringOrNode, // field placeholder, displayed when there's no value (shared with Select)
 		searchPromptText: _react2['default'].PropTypes.string, // label to prompt for search input
 		searchingText: _react2['default'].PropTypes.string },
@@ -339,7 +339,8 @@ var Select = _react2['default'].createClass({
 	propTypes: {
 		addLabelText: _react2['default'].PropTypes.string, // placeholder displayed when you want to add a label on a multi-value input
 		allowCreate: _react2['default'].PropTypes.bool, // whether to allow creation of new entries
-		autoBlur: _react2['default'].PropTypes.bool,
+		openOnFocus: _react2['default'].PropTypes.bool, // always open options menu on focus
+		autoBlur: _react2['default'].PropTypes.bool, // automatically blur the component when an option is selected
 		autofocus: _react2['default'].PropTypes.bool, // autofocus the component on mount
 		autosize: _react2['default'].PropTypes.bool, // whether to enable autosizing or not
 		backspaceRemoves: _react2['default'].PropTypes.bool, // whether backspace removes an item if there is no text input
@@ -389,6 +390,7 @@ var Select = _react2['default'].createClass({
 		simpleValue: _react2['default'].PropTypes.bool, // pass the value to onChange as a simple value (legacy pre 1.0 mode), defaults to false
 		style: _react2['default'].PropTypes.object, // optional style to apply to the control
 		tabIndex: _react2['default'].PropTypes.string, // optional tab index of the control
+		tabSelectsValue: _react2['default'].PropTypes.bool, // whether to treat tabbing out while focused to be value selection
 		value: _react2['default'].PropTypes.any, // initial field value
 		valueComponent: _react2['default'].PropTypes.func, // value component to render
 		valueKey: _react2['default'].PropTypes.string, // path of the label value in option objects
@@ -430,6 +432,7 @@ var Select = _react2['default'].createClass({
 			scrollMenuIntoView: true,
 			searchable: true,
 			simpleValue: false,
+			tabSelectsValue: true,
 			valueComponent: _Value2['default'],
 			valueKey: 'value'
 		};
@@ -494,7 +497,7 @@ var Select = _react2['default'].createClass({
 		if (this.props.scrollMenuIntoView && this.refs.menuContainer) {
 			var menuContainerRect = this.refs.menuContainer.getBoundingClientRect();
 			if (window.innerHeight < menuContainerRect.bottom + this.props.menuBuffer) {
-				window.scrollTo(0, window.scrollY + menuContainerRect.bottom + this.props.menuBuffer - window.innerHeight);
+				window.scrollBy(0, menuContainerRect.bottom + this.props.menuBuffer - window.innerHeight);
 			}
 		}
 		if (prevProps.disabled !== this.props.disabled) {
@@ -618,7 +621,7 @@ var Select = _react2['default'].createClass({
 	},
 
 	handleInputFocus: function handleInputFocus(event) {
-		var isOpen = this.state.isOpen || this._openAfterFocus;
+		var isOpen = this.state.isOpen || this._openAfterFocus || this.props.openOnFocus;
 		if (this.props.onFocus) {
 			this.props.onFocus(event);
 		}
@@ -631,6 +634,7 @@ var Select = _react2['default'].createClass({
 
 	handleInputBlur: function handleInputBlur(event) {
 		if (this.refs.menu && document.activeElement.isEqualNode(this.refs.menu)) {
+			this.focus();
 			return;
 		}
 
@@ -668,7 +672,7 @@ var Select = _react2['default'].createClass({
 				return;
 			case 9:
 				// tab
-				if (event.shiftKey || !this.state.isOpen) {
+				if (event.shiftKey || !this.state.isOpen || !this.props.tabSelectsValue) {
 					return;
 				}
 				this.selectFocusedOption();
@@ -1137,6 +1141,26 @@ var Select = _react2['default'].createClass({
 		}
 	},
 
+	renderOuter: function renderOuter(options, valueArray, focusedOption) {
+		var menu = this.renderMenu(options, valueArray, focusedOption);
+		if (!menu) {
+			return null;
+		}
+
+		return _react2['default'].createElement(
+			'div',
+			{ ref: 'menuContainer', className: 'Select-menu-outer', style: this.props.menuContainerStyle },
+			_react2['default'].createElement(
+				'div',
+				{ ref: 'menu', className: 'Select-menu',
+					style: this.props.menuStyle,
+					onScroll: this.handleMenuScroll,
+					onMouseDown: this.handleMouseDownOnMenu },
+				menu
+			)
+		);
+	},
+
 	render: function render() {
 		var valueArray = this.getValueArray();
 		var options = this._visibleOptions = this.filterOptions(this.props.multi ? valueArray : null);
@@ -1153,6 +1177,7 @@ var Select = _react2['default'].createClass({
 			'is-searchable': this.props.searchable,
 			'has-value': valueArray.length
 		});
+
 		return _react2['default'].createElement(
 			'div',
 			{ ref: 'wrapper', className: className, style: this.props.wrapperStyle },
@@ -1173,18 +1198,7 @@ var Select = _react2['default'].createClass({
 				this.renderClear(),
 				this.renderArrow()
 			),
-			isOpen ? _react2['default'].createElement(
-				'div',
-				{ ref: 'menuContainer', className: 'Select-menu-outer', style: this.props.menuContainerStyle },
-				_react2['default'].createElement(
-					'div',
-					{ ref: 'menu', className: 'Select-menu',
-						style: this.props.menuStyle,
-						onScroll: this.handleMenuScroll,
-						onMouseDown: this.handleMouseDownOnMenu },
-					this.renderMenu(options, !this.props.multi ? valueArray : null, focusedOption)
-				)
-			) : null
+			isOpen ? this.renderOuter(options, !this.props.multi ? valueArray : null, focusedOption) : null
 		);
 	}
 
