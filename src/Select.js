@@ -8,7 +8,9 @@ import stripDiacritics from './utils/stripDiacritics';
 import Async from './Async';
 import Option from './Option';
 import Value from './Value';
-import Draggable from './Draggable';
+import {DraggableSelect, DraggableValue} from './Draggable';
+import {DragDropContext} from 'react-dnd';
+import HTML5Backend from 'react-dnd-html5-backend';
 
 function stringifyValue (value) {
 	if (typeof value === 'object') {
@@ -865,4 +867,10 @@ const Select = React.createClass({
 });
 
 export default Select;
-export {Draggable};
+
+var Draggable = DraggableSelect(
+  DragDropContext(HTML5Backend)(Select),
+  DraggableValue(Value)
+);
+
+export {Draggable, DraggableSelect, DraggableValue};
