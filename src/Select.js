@@ -873,4 +873,7 @@ var Draggable = DraggableSelect(
   DraggableValue(Value)
 );
 
-export {Draggable, DraggableSelect, DraggableValue, Value};
+export {Draggable};
+export {DraggableSelect};
+export {DraggableValue};
+export {Value};
