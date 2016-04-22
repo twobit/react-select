@@ -8791,6 +8791,7 @@ var Draggable = (0, _Draggable.DraggableSelect)((0, _reactDnd.DragDropContext)(_
 exports.Draggable = Draggable;
 exports.DraggableSelect = _Draggable.DraggableSelect;
 exports.DraggableValue = _Draggable.DraggableValue;
+exports.Value = _Value2['default'];
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{"./Async":211,"./Draggable":212,"./Option":213,"./Value":215,"./utils/stripDiacritics":216,"react-dnd":190,"react-dnd-html5-backend":98}],215:[function(require,module,exports){
