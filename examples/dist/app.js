@@ -480,36 +480,36 @@ var _reactSelect = require('react-select');
 var _reactSelect2 = _interopRequireDefault(_reactSelect);
 
 var DraggableSelect = _react2['default'].createClass({
-	displayName: 'DraggableSelect',
-	propTypes: {
-		label: _react2['default'].PropTypes.string
-	},
-	getInitialState: function getInitialState() {
-		return {
-			options: [{ value: 10, label: 'Ten' }, { value: 11, label: 'Eleven' }, { value: 12, label: 'Twelve' }, { value: 23, label: 'Twenty-three' }, { value: 24, label: 'Twenty-four' }],
-			value: null
-		};
-	},
-	onChange: function onChange(value) {
-		this.setState({ value: value });
-		console.log('Select value changed to', value);
-	},
-	render: function render() {
-		return _react2['default'].createElement(
-			'div',
-			{ className: 'section' },
-			_react2['default'].createElement(
-				'h3',
-				{ className: 'section-heading' },
-				this.props.label
-			),
-			_react2['default'].createElement(_reactSelect.Draggable, {
-				onChange: this.onChange,
-				value: this.state.value,
-				options: this.state.options
-			})
-		);
-	}
+  displayName: 'DraggableSelect',
+  propTypes: {
+    label: _react2['default'].PropTypes.string
+  },
+  getInitialState: function getInitialState() {
+    return {
+      options: [{ key: 10, title: 'Ten' }, { key: 11, title: 'Eleven' }, { key: 12, title: 'Twelve' }, { key: 23, title: 'Twenty-three' }, { key: 24, title: 'Twenty-four' }],
+      value: null
+    };
+  },
+  onChange: function onChange(value) {
+    this.setState({ value: value });
+    console.log('Select value changed to', value);
+  },
+  render: function render() {
+    return _react2['default'].createElement(
+      'div',
+      { className: 'section' },
+      _react2['default'].createElement(
+        'h3',
+        { className: 'section-heading' },
+        this.props.label
+      ),
+      _react2['default'].createElement(_reactSelect.Draggable, { valueKey: 'key',
+        labelKey: 'title',
+        onChange: this.onChange,
+        value: this.state.value,
+        options: this.state.options })
+    );
+  }
 });
 
 module.exports = DraggableSelect;

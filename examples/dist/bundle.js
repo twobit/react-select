@@ -7648,23 +7648,23 @@ var _react = require('react');
 
 var _react2 = _interopRequireDefault(_react);
 
+var _reactDnd = require('react-dnd');
+
 var _classnames = require('classnames');
 
 var _classnames2 = _interopRequireDefault(_classnames);
 
-var _reactDnd = require('react-dnd');
-
 var itemSource = {
   beginDrag: function beginDrag(props) {
-    return { value: props.value };
+    return props.value;
   }
 };
 
 var itemTarget = {
   hover: function hover(props, monitor) {
-    var item = monitor.getItem().value;
+    var item = monitor.getItem();
     if (item !== props.value) {
-      props.moveItem(item, props.value);
+      props.onChangeLayout(item, props.value);
     }
   }
 };
@@ -7672,7 +7672,7 @@ var itemTarget = {
 function collectDrag(connect, monitor) {
   return {
     connectDragSource: connect.dragSource(),
-    draggingOpacity: monitor.isDragging() ? 0.3 : null
+    isDragging: monitor.isDragging()
   };
 }
 
@@ -7688,13 +7688,13 @@ var DraggableValue = function DraggableValue(Component) {
       var _props = this.props;
       var connectDragSource = _props.connectDragSource;
       var connectDropTarget = _props.connectDropTarget;
-      var draggingOpacity = _props.draggingOpacity;
+      var isDragging = _props.isDragging;
 
-      var rest = _objectWithoutProperties(_props, ['connectDragSource', 'connectDropTarget', 'draggingOpacity']);
+      var rest = _objectWithoutProperties(_props, ['connectDragSource', 'connectDropTarget', 'isDragging']);
 
       return connectDragSource(connectDropTarget(_react2['default'].createElement(
         'span',
-        { style: { opacity: draggingOpacity },
+        { style: { opacity: isDragging ? 0.3 : null },
           onMouseDown: function (e) {
             return e.stopPropagation();
           } },
@@ -7706,27 +7706,33 @@ var DraggableValue = function DraggableValue(Component) {
 
 var DraggableSelect = function DraggableSelect(Component, ValueComponent) {
   return _react2['default'].createClass({
-    moveItem: function moveItem(src, dest) {
+    getDefaultProps: function getDefaultProps() {
+      return {
+        valueKey: 'value'
+      };
+    },
+
+    onChangeLayout: function onChangeLayout(src, dest) {
       var _props2 = this.props;
-      var onChange = _props2.onChange;
       var value = _props2.value;
+      var valueKey = _props2.valueKey;
+      var onChange = _props2.onChange;
       var values = value.map(function (d) {
-        return d.value;
+        return d[valueKey];
       });
-      var srcIndex = values.indexOf(src.value);
-      var destIndex = values.indexOf(dest.value);
-      var valueCopy = value.concat([]);
+      var srcIndex = values.indexOf(src[valueKey]);
+      var destIndex = values.indexOf(dest[valueKey]);
+      var newValue = value.concat([]);
 
-      valueCopy.splice(srcIndex, 1);
-      valueCopy.splice(destIndex, 0, src);
-
-      onChange(valueCopy);
+      newValue.splice(srcIndex, 1);
+      newValue.splice(destIndex, 0, src);
+      onChange(newValue);
     },
 
     render: function render() {
       return _react2['default'].createElement(Component, _extends({}, this.props, {
         multi: true,
-        moveItem: this.moveItem,
+        onChangeLayout: this.onChangeLayout,
         valueComponent: ValueComponent }));
     }
   });
@@ -8610,7 +8616,7 @@ var Select = _react2['default'].createClass({
 				return _react2['default'].createElement(
 					ValueComponent,
 					{
-						moveItem: _this2.props.moveItem,
+						onChangeLayout: _this2.props.onChangeLayout,
 						disabled: _this2.props.disabled || value.clearableValue === false,
 						key: 'value-' + value[_this2.props.valueKey],
 						onClick: onClick,

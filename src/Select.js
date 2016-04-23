@@ -587,7 +587,7 @@ const Select = React.createClass({
 			return valueArray.map((value, i) => {
 				return (
 					<ValueComponent
-            moveItem={this.props.moveItem}
+            onChangeLayout={this.props.onChangeLayout}
 						disabled={this.props.disabled || value.clearableValue === false}
 						key={`value-${value[this.props.valueKey]}`}
 						onClick={onClick}

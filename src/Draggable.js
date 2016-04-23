@@ -1,18 +1,18 @@
 import React from 'react';
-import classNames from 'classnames';
 import {DragSource, DropTarget} from 'react-dnd';
+import classNames from 'classnames';
 
 const itemSource = {
   beginDrag(props) {
-    return {value: props.value};
+    return props.value;
   }
 };
 
 const itemTarget = {
   hover(props, monitor) {
-    const item = monitor.getItem().value;
+    const item = monitor.getItem();
     if (item !== props.value) {
-      props.moveItem(item, props.value);
+      props.onChangeLayout(item, props.value);
     }
   }
 };
@@ -20,7 +20,7 @@ const itemTarget = {
 function collectDrag(connect, monitor) {
   return {
     connectDragSource: connect.dragSource(),
-    draggingOpacity: monitor.isDragging() ? 0.3 : null
+    isDragging: monitor.isDragging()
   };
 }
 
@@ -36,9 +36,9 @@ var DraggableValue = function(Component) {
     DropTarget("DraggableSelect", itemTarget, collectDrop)(
       React.createClass({
         render() {
-          const {connectDragSource, connectDropTarget, draggingOpacity, ...rest} = this.props;
+          const {connectDragSource, connectDropTarget, isDragging, ...rest} = this.props;
           return connectDragSource(connectDropTarget(
-            <span style={{opacity: draggingOpacity}}
+            <span style={{opacity: isDragging ? 0.3 : null}}
                   onMouseDown={e => e.stopPropagation()}>
                     <Component {...rest} />
             </span>
@@ -51,24 +51,29 @@ var DraggableValue = function(Component) {
 
 var DraggableSelect = function(Component, ValueComponent) {
   return React.createClass({
-    moveItem(src, dest) {
-      const {onChange, value} = this.props,
-            values = value.map(d => d.value),
-            srcIndex = values.indexOf(src.value),
-            destIndex = values.indexOf(dest.value),
-            valueCopy = value.concat([]);
+  	getDefaultProps () {
+  		return {
+			  valueKey: 'value'
+      };
+    },
 
-      valueCopy.splice(srcIndex, 1);
-      valueCopy.splice(destIndex, 0, src);
+    onChangeLayout(src, dest) {
+      const {value, valueKey, onChange} = this.props,
+            values = value.map(d => d[valueKey]),
+            srcIndex = values.indexOf(src[valueKey]),
+            destIndex = values.indexOf(dest[valueKey]),
+            newValue = value.concat([]);
 
-      onChange(valueCopy);
+      newValue.splice(srcIndex, 1);
+      newValue.splice(destIndex, 0, src);
+      onChange(newValue);
     },
 
   	render() {
   		return (
   			<Component {...this.props}
   				multi={true}
-          moveItem={this.moveItem}
+          onChangeLayout={this.onChangeLayout}
           valueComponent={ValueComponent} />
   		);
   	}
