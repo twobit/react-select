@@ -2208,6 +2208,7 @@ function baseDifference(array, values, iteratee, comparator) {
     var value = array[index],
         computed = iteratee ? iteratee(value) : value;
 
+    value = (comparator || value !== 0) ? value : 0;
     if (isCommon && computed === computed) {
       var valuesIndex = valuesLength;
       while (valuesIndex--) {
@@ -2305,6 +2306,7 @@ function baseIntersection(arrays, iteratee, comparator) {
     var value = array[index],
         computed = iteratee ? iteratee(value) : value;
 
+    value = (comparator || value !== 0) ? value : 0;
     if (!(seen
           ? cacheHas(seen, computed)
           : includes(result, computed, comparator)
@@ -2411,6 +2413,7 @@ function baseUniq(array, iteratee, comparator) {
     var value = array[index],
         computed = iteratee ? iteratee(value) : value;
 
+    value = (comparator || value !== 0) ? value : 0;
     if (isCommon && computed === computed) {
       var seenIndex = seen.length;
       while (seenIndex--) {
@@ -2555,7 +2558,11 @@ module.exports = checkGlobal;
 
 },{}],52:[function(require,module,exports){
 var Set = require('./_Set'),
-    noop = require('./noop');
+    noop = require('./noop'),
+    setToArray = require('./_setToArray');
+
+/** Used as references for various `Number` constants. */
+var INFINITY = 1 / 0;
 
 /**
  * Creates a set of `values`.
@@ -2564,13 +2571,13 @@ var Set = require('./_Set'),
  * @param {Array} values The values to add to the set.
  * @returns {Object} Returns the new set.
  */
-var createSet = !(Set && new Set([1, 2]).size === 2) ? noop : function(values) {
+var createSet = !(Set && (1 / setToArray(new Set([,-0]))[1]) == INFINITY) ? noop : function(values) {
   return new Set(values);
 };
 
 module.exports = createSet;
 
-},{"./_Set":28,"./noop":82}],53:[function(require,module,exports){
+},{"./_Set":28,"./_setToArray":69,"./noop":82}],53:[function(require,module,exports){
 var baseProperty = require('./_baseProperty');
 
 /**
@@ -2753,8 +2760,9 @@ module.exports = isHostObject;
  */
 function isKeyable(value) {
   var type = typeof value;
-  return type == 'number' || type == 'boolean' ||
-    (type == 'string' && value != '__proto__') || value == null;
+  return (type == 'string' || type == 'number' || type == 'symbol' || type == 'boolean')
+    ? (value !== '__proto__')
+    : (value === null);
 }
 
 module.exports = isKeyable;
@@ -3623,6 +3631,7 @@ var baseDifference = require('./_baseDifference'),
  * @param {Array} array The array to filter.
  * @param {...*} [values] The values to exclude.
  * @returns {Array} Returns the new array of filtered values.
+ * @see _.difference, _.xor
  * @example
  *
  * _.without([1, 2, 1, 3], 1, 2);
@@ -3654,6 +3663,7 @@ var arrayFilter = require('./_arrayFilter'),
  * @category Array
  * @param {...Array} [arrays] The arrays to inspect.
  * @returns {Array} Returns the new array of values.
+ * @see _.difference, _.without
  * @example
  *
  * _.xor([2, 1], [4, 2]);
@@ -3666,6 +3676,7 @@ var xor = rest(function(arrays) {
 module.exports = xor;
 
 },{"./_arrayFilter":31,"./_baseXor":47,"./isArrayLikeObject":75,"./rest":83}],88:[function(require,module,exports){
+(function (process){
 /**
  * Copyright 2013-2015, Facebook, Inc.
  * All rights reserved.
@@ -3689,7 +3700,7 @@ module.exports = xor;
  */
 
 var invariant = function(condition, format, a, b, c, d, e, f) {
-  if ("production" !== 'production') {
+  if (process.env.NODE_ENV !== 'production') {
     if (format === undefined) {
       throw new Error('invariant requires an error message argument');
     }
@@ -3718,7 +3729,8 @@ var invariant = function(condition, format, a, b, c, d, e, f) {
 
 module.exports = invariant;
 
-},{}],89:[function(require,module,exports){
+}).call(this,require('_process'))
+},{"_process":89}],89:[function(require,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -5153,7 +5165,7 @@ module.exports = createAssigner;
 
 },{"./_isIterateeCall":143,"./rest":173}],131:[function(require,module,exports){
 arguments[4][52][0].apply(exports,arguments)
-},{"./_Set":104,"./noop":172,"dup":52}],132:[function(require,module,exports){
+},{"./_Set":104,"./_setToArray":154,"./noop":172,"dup":52}],132:[function(require,module,exports){
 arguments[4][53][0].apply(exports,arguments)
 },{"./_baseProperty":122,"dup":53}],133:[function(require,module,exports){
 arguments[4][54][0].apply(exports,arguments)
@@ -5229,9 +5241,10 @@ var reIsUint = /^(?:0|[1-9]\d*)$/;
  * @returns {boolean} Returns `true` if `value` is a valid index, else `false`.
  */
 function isIndex(value, length) {
-  value = (typeof value == 'number' || reIsUint.test(value)) ? +value : -1;
   length = length == null ? MAX_SAFE_INTEGER : length;
-  return value > -1 && value % 1 == 0 && value < length;
+  return !!length &&
+    (typeof value == 'number' || reIsUint.test(value)) &&
+    (value > -1 && value % 1 == 0 && value < length);
 }
 
 module.exports = isIndex;
@@ -5350,6 +5363,7 @@ var copyObject = require('./_copyObject'),
  * @param {...Object} sources The source objects.
  * @param {Function} [customizer] The function to customize assigned values.
  * @returns {Object} Returns `object`.
+ * @see _.assignWith
  * @example
  *
  * function customizer(objValue, srcValue) {
@@ -5388,6 +5402,7 @@ var apply = require('./_apply'),
  * @param {Object} object The destination object.
  * @param {...Object} [sources] The source objects.
  * @returns {Object} Returns `object`.
+ * @see _.defaultsDeep
  * @example
  *
  * _.defaults({ 'user': 'barney' }, { 'age': 36 }, { 'user': 'fred' });
@@ -7447,11 +7462,7 @@ module.exports = function symbolObservablePonyfill(root) {
 		if (Symbol.observable) {
 			result = Symbol.observable;
 		} else {
-			if (typeof Symbol.for === 'function') {
-				result = Symbol.for('observable');
-			} else {
-				result = Symbol('observable');
-			}
+			result = Symbol('observable');
 			Symbol.observable = result;
 		}
 	} else {
@@ -7528,8 +7539,9 @@ var Async = _react2['default'].createClass({
 		loadingPlaceholder: _react2['default'].PropTypes.string, // replaces the placeholder while options are loading
 		minimumInput: _react2['default'].PropTypes.number, // the minimum number of characters that trigger loadOptions
 		noResultsText: stringOrNode, // placeholder displayed when there are no matching search results (shared with Select)
+		onInputChange: _react2['default'].PropTypes.func, // onInputChange handler: function (inputValue) {}
 		placeholder: stringOrNode, // field placeholder, displayed when there's no value (shared with Select)
-		searchPromptText: _react2['default'].PropTypes.string, // label to prompt for search input
+		searchPromptText: stringOrNode, // label to prompt for search input
 		searchingText: _react2['default'].PropTypes.string },
 	// message to display while options are loading
 	getDefaultProps: function getDefaultProps() {
@@ -7589,6 +7601,13 @@ var Async = _react2['default'].createClass({
 		};
 	},
 	loadOptions: function loadOptions(input) {
+		if (this.props.onInputChange) {
+			var nextState = this.props.onInputChange(input);
+			// Note: != used deliberately here to catch undefined and null
+			if (nextState != null) {
+				input = '' + nextState;
+			}
+		}
 		if (this.props.ignoreAccents) input = (0, _utilsStripDiacritics2['default'])(input);
 		if (this.props.ignoreCase) input = input.toLowerCase();
 		this._lastInput = input;
@@ -7922,7 +7941,6 @@ var Select = _react2['default'].createClass({
 	propTypes: {
 		addLabelText: _react2['default'].PropTypes.string, // placeholder displayed when you want to add a label on a multi-value input
 		allowCreate: _react2['default'].PropTypes.bool, // whether to allow creation of new entries
-		openOnFocus: _react2['default'].PropTypes.bool, // always open options menu on focus
 		autoBlur: _react2['default'].PropTypes.bool, // automatically blur the component when an option is selected
 		autofocus: _react2['default'].PropTypes.bool, // autofocus the component on mount
 		autosize: _react2['default'].PropTypes.bool, // whether to enable autosizing or not
@@ -7939,6 +7957,7 @@ var Select = _react2['default'].createClass({
 		ignoreAccents: _react2['default'].PropTypes.bool, // whether to strip diacritics when filtering
 		ignoreCase: _react2['default'].PropTypes.bool, // whether to perform case-insensitive filtering
 		inputProps: _react2['default'].PropTypes.object, // custom attributes for the Input
+		inputRenderer: _react2['default'].PropTypes.func, // returns a custom input component
 		isLoading: _react2['default'].PropTypes.bool, // whether the Select is loading externally or not (such as options being loaded)
 		joinValues: _react2['default'].PropTypes.bool, // joins multiple values into a single form field with the delimiter (legacy mode)
 		labelKey: _react2['default'].PropTypes.string, // path of the label value in option objects
@@ -7962,12 +7981,14 @@ var Select = _react2['default'].createClass({
 		onOpen: _react2['default'].PropTypes.func, // fires when the menu is opened
 		onValueClick: _react2['default'].PropTypes.func, // onClick handler for value labels: function (value, event) {}
 		openAfterFocus: _react2['default'].PropTypes.bool, // boolean to enable opening dropdown when focused
+		openOnFocus: _react2['default'].PropTypes.bool, // always open options menu on focus
 		optionClassName: _react2['default'].PropTypes.string, // additional class(es) to apply to the <Option /> elements
 		optionComponent: _react2['default'].PropTypes.func, // option component to render in dropdown
 		optionRenderer: _react2['default'].PropTypes.func, // optionRenderer: function (option) {}
 		options: _react2['default'].PropTypes.array, // array of options
 		placeholder: stringOrNode, // field placeholder, displayed when there's no value
 		required: _react2['default'].PropTypes.bool, // applies HTML5 required attribute when needed
+		resetValue: _react2['default'].PropTypes.any, // value to use when you clear the control
 		scrollMenuIntoView: _react2['default'].PropTypes.bool, // boolean to enable the viewport to shift so that the full menu fully visible when engaged
 		searchable: _react2['default'].PropTypes.bool, // whether to enable searching feature or not
 		simpleValue: _react2['default'].PropTypes.bool, // pass the value to onChange as a simple value (legacy pre 1.0 mode), defaults to false
@@ -8012,6 +8033,7 @@ var Select = _react2['default'].createClass({
 			optionComponent: _Option2['default'],
 			placeholder: 'Select...',
 			required: false,
+			resetValue: null,
 			scrollMenuIntoView: true,
 			searchable: true,
 			simpleValue: false,
@@ -8028,8 +8050,18 @@ var Select = _react2['default'].createClass({
 			isLoading: false,
 			isOpen: false,
 			isPseudoFocused: false,
-			required: this.props.required && this.handleRequired(this.props.value, this.props.multi)
+			required: false
 		};
+	},
+
+	componentWillMount: function componentWillMount() {
+		var valueArray = this.getValueArray(this.props.value);
+
+		if (this.props.required) {
+			this.setState({
+				required: this.handleRequired(valueArray[0], this.props.multi)
+			});
+		}
 	},
 
 	componentDidMount: function componentDidMount() {
@@ -8039,9 +8071,11 @@ var Select = _react2['default'].createClass({
 	},
 
 	componentWillReceiveProps: function componentWillReceiveProps(nextProps) {
-		if (this.props.value !== nextProps.value && nextProps.required) {
+		var valueArray = this.getValueArray(nextProps.value);
+
+		if (nextProps.required) {
 			this.setState({
-				required: this.handleRequired(nextProps.value, nextProps.multi)
+				required: this.handleRequired(valueArray[0], nextProps.multi)
 			});
 		}
 	},
@@ -8064,9 +8098,6 @@ var Select = _react2['default'].createClass({
 			this.hasScrolledToOption = false;
 		}
 
-		if (prevState.inputValue !== this.state.inputValue && this.props.onInputChange) {
-			this.props.onInputChange(this.state.inputValue);
-		}
 		if (this._scrollToFocusedOptionOnUpdate && this.refs.focused && this.refs.menu) {
 			this._scrollToFocusedOptionOnUpdate = false;
 			var focusedDOM = _reactDom2['default'].findDOMNode(this.refs.focused);
@@ -8216,7 +8247,7 @@ var Select = _react2['default'].createClass({
 	},
 
 	handleInputBlur: function handleInputBlur(event) {
-		if (this.refs.menu && document.activeElement.isEqualNode(this.refs.menu)) {
+		if (this.refs.menu && document.activeElement === this.refs.menu) {
 			this.focus();
 			return;
 		}
@@ -8236,10 +8267,18 @@ var Select = _react2['default'].createClass({
 	},
 
 	handleInputChange: function handleInputChange(event) {
+		var newInputValue = event.target.value;
+		if (this.state.inputValue !== event.target.value && this.props.onInputChange) {
+			var nextState = this.props.onInputChange(newInputValue);
+			// Note: != used deliberately here to catch undefined and null
+			if (nextState != null) {
+				newInputValue = '' + nextState;
+			}
+		}
 		this.setState({
 			isOpen: true,
 			isPseudoFocused: false,
-			inputValue: event.target.value
+			inputValue: newInputValue
 		});
 	},
 
@@ -8320,8 +8359,7 @@ var Select = _react2['default'].createClass({
 		return op[this.props.labelKey];
 	},
 
-	getValueArray: function getValueArray() {
-		var value = this.props.value;
+	getValueArray: function getValueArray(value) {
 		if (this.props.multi) {
 			if (typeof value === 'string') value = value.split(this.props.delimiter);
 			if (!Array.isArray(value)) {
@@ -8385,19 +8423,19 @@ var Select = _react2['default'].createClass({
 	},
 
 	addValue: function addValue(value) {
-		var valueArray = this.getValueArray();
+		var valueArray = this.getValueArray(this.props.value);
 		this.setValue(valueArray.concat(value));
 	},
 
 	popValue: function popValue() {
-		var valueArray = this.getValueArray();
+		var valueArray = this.getValueArray(this.props.value);
 		if (!valueArray.length) return;
 		if (valueArray[valueArray.length - 1].clearableValue === false) return;
 		this.setValue(valueArray.slice(0, valueArray.length - 1));
 	},
 
 	removeValue: function removeValue(value) {
-		var valueArray = this.getValueArray();
+		var valueArray = this.getValueArray(this.props.value);
 		this.setValue(valueArray.filter(function (i) {
 			return i !== value;
 		}));
@@ -8412,7 +8450,7 @@ var Select = _react2['default'].createClass({
 		}
 		event.stopPropagation();
 		event.preventDefault();
-		this.setValue(null);
+		this.setValue(this.props.resetValue);
 		this.setState({
 			isOpen: false,
 			inputValue: ''
@@ -8530,42 +8568,46 @@ var Select = _react2['default'].createClass({
 	},
 
 	renderInput: function renderInput(valueArray) {
-		var className = (0, _classnames2['default'])('Select-input', this.props.inputProps.className);
-		if (this.props.disabled || !this.props.searchable) {
-			return _react2['default'].createElement('div', _extends({}, this.props.inputProps, {
-				className: className,
-				tabIndex: this.props.tabIndex || 0,
-				onBlur: this.handleInputBlur,
-				onFocus: this.handleInputFocus,
-				ref: 'input',
-				style: { border: 0, width: 1, display: 'inline-block' } }));
+		if (this.props.inputRenderer) {
+			return this.props.inputRenderer();
+		} else {
+			var className = (0, _classnames2['default'])('Select-input', this.props.inputProps.className);
+			if (this.props.disabled || !this.props.searchable) {
+				return _react2['default'].createElement('div', _extends({}, this.props.inputProps, {
+					className: className,
+					tabIndex: this.props.tabIndex || 0,
+					onBlur: this.handleInputBlur,
+					onFocus: this.handleInputFocus,
+					ref: 'input',
+					style: { border: 0, width: 1, display: 'inline-block' } }));
+			}
+			if (this.props.autosize) {
+				return _react2['default'].createElement(_reactInputAutosize2['default'], _extends({}, this.props.inputProps, {
+					className: className,
+					tabIndex: this.props.tabIndex,
+					onBlur: this.handleInputBlur,
+					onChange: this.handleInputChange,
+					onFocus: this.handleInputFocus,
+					minWidth: '5',
+					ref: 'input',
+					required: this.state.required,
+					value: this.state.inputValue
+				}));
+			}
+			return _react2['default'].createElement(
+				'div',
+				{ className: className },
+				_react2['default'].createElement('input', _extends({}, this.props.inputProps, {
+					tabIndex: this.props.tabIndex,
+					onBlur: this.handleInputBlur,
+					onChange: this.handleInputChange,
+					onFocus: this.handleInputFocus,
+					ref: 'input',
+					required: this.state.required,
+					value: this.state.inputValue
+				}))
+			);
 		}
-		if (this.props.autosize) {
-			return _react2['default'].createElement(_reactInputAutosize2['default'], _extends({}, this.props.inputProps, {
-				className: className,
-				tabIndex: this.props.tabIndex,
-				onBlur: this.handleInputBlur,
-				onChange: this.handleInputChange,
-				onFocus: this.handleInputFocus,
-				minWidth: '5',
-				ref: 'input',
-				required: this.state.required,
-				value: this.state.inputValue
-			}));
-		}
-		return _react2['default'].createElement(
-			'div',
-			{ className: className },
-			_react2['default'].createElement('input', _extends({}, this.props.inputProps, {
-				tabIndex: this.props.tabIndex,
-				onBlur: this.handleInputBlur,
-				onChange: this.handleInputChange,
-				onFocus: this.handleInputFocus,
-				ref: 'input',
-				required: this.state.required,
-				value: this.state.inputValue
-			}))
-		);
 	},
 
 	renderClear: function renderClear() {
@@ -8746,13 +8788,14 @@ var Select = _react2['default'].createClass({
 	},
 
 	render: function render() {
-		var valueArray = this.getValueArray();
+		var valueArray = this.getValueArray(this.props.value);
 		var options = this._visibleOptions = this.filterOptions(this.props.multi ? valueArray : null);
 		var isOpen = this.state.isOpen;
 		if (this.props.multi && !options.length && valueArray.length && !this.state.inputValue) isOpen = false;
 		var focusedOption = this._focusedOption = this.getFocusableOption(valueArray[0]);
 		var className = (0, _classnames2['default'])('Select', this.props.className, {
 			'Select--multi': this.props.multi,
+			'Select--single': !this.props.multi,
 			'is-disabled': this.props.disabled,
 			'is-focused': this.state.isFocused,
 			'is-loading': this.props.isLoading,
