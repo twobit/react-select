@@ -3676,6 +3676,7 @@ var xor = rest(function(arrays) {
 module.exports = xor;
 
 },{"./_arrayFilter":31,"./_baseXor":47,"./isArrayLikeObject":75,"./rest":83}],88:[function(require,module,exports){
+(function (process){
 /**
  * Copyright 2013-2015, Facebook, Inc.
  * All rights reserved.
@@ -3699,7 +3700,7 @@ module.exports = xor;
  */
 
 var invariant = function(condition, format, a, b, c, d, e, f) {
-  if ("production" !== 'production') {
+  if (process.env.NODE_ENV !== 'production') {
     if (format === undefined) {
       throw new Error('invariant requires an error message argument');
     }
@@ -3728,7 +3729,8 @@ var invariant = function(condition, format, a, b, c, d, e, f) {
 
 module.exports = invariant;
 
-},{}],89:[function(require,module,exports){
+}).call(this,require('_process'))
+},{"_process":89}],89:[function(require,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
